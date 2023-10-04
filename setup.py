@@ -23,6 +23,7 @@ setuptools.setup(
     license="GPL-3.0-only",
     test_suite="tests",
     setup_requires=["setuptools_scm"],
+    include_package_data=True,
     install_requires=[],
     extras_require={
         "testing": test_requires,
