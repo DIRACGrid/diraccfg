@@ -642,7 +642,7 @@ class CFG:
             return False
 
     # def __getitem__(self, key: str) -> CFG | str | Literal[False]:
-    def __getitem__(self, key: str) -> CFG | str:
+    def __getitem__(self, key: str) -> CFG | str | Literal[False]:
         """
         Get the contents of a section/option
 
@@ -653,7 +653,7 @@ class CFG:
         if key.find("/") > -1:
             subDict = self.getRecursive(key)
             if not subDict:
-                return False  # type: ignore
+                return False
                 # raise KeyError(key)
             return subDict["value"]
         return self.__dataDict[key]
