@@ -27,6 +27,12 @@ jobs:
           - "3.11"
     steps:
     - uses: actions/checkout@v3
+    - name: Install conda
+      run: |
+        wget -q -O /tmp/miniforge.sh "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh"
+        bash /tmp/miniforge.sh -b -p "${HOME}/miniforge"
+        echo "${HOME}/miniforge/bin" >> "$GITHUB_PATH"
+        echo "CONDA=${HOME}/miniforge" >> "$GITHUB_ENV"
     - name: Prepare environment
       run: .github/workflows/prepare_environment.sh ${{ matrix.python_version }}
     - name: Run pytest
@@ -52,6 +58,12 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v3
+      - name: Install conda
+        run: |
+          wget -q -O /tmp/miniforge.sh "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh"
+          bash /tmp/miniforge.sh -b -p "${HOME}/miniforge"
+          echo "${HOME}/miniforge/bin" >> "$GITHUB_PATH"
+          echo "CONDA=${HOME}/miniforge" >> "$GITHUB_ENV"
       - run: |
           git fetch --prune --unshallow
       - name: Prepare environment
