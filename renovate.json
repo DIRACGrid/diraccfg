@@ -3,9 +3,5 @@
   "description": "Adopts the shared DIRACGrid Renovate policy (see DIRACGrid/.github renovate-config.json).",
   "extends": [
     "local>DIRACGrid/.github//renovate-config"
-  ],
-  "pre-commit": {
-    "description": "Off by default in Renovate; besides the Actions, the pre-commit hooks are the only pinned dependencies here.",
-    "enabled": true
-  }
+  ]
 }
