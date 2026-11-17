@@ -641,7 +641,6 @@ class CFG:
         else:
             return False
 
-    # def __getitem__(self, key: str) -> CFG | str | Literal[False]:
     def __getitem__(self, key: str) -> CFG | str | Literal[False]:
         """
         Get the contents of a section/option
