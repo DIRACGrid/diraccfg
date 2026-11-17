@@ -19,7 +19,9 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
-          python-version: 3.x
+          # the pinned pre-commit hook versions (flynt 0.77, pyupgrade v3.3.1)
+          # predate the removal of ast.Str in Python 3.12
+          python-version: '3.11'
       - uses: pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd # v3.0.1
 
   pytest:
