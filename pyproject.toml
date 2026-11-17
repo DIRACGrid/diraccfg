@@ -16,3 +16,37 @@ files = 'src/diraccfg'
 
 [tool.pylint."messages control"]
 disable = ["unsubscriptable-object"]
+
+[tool.pixi.workspace]
+channels = ["conda-forge"]
+platforms = ["linux-64", "osx-arm64"]
+# Supply-chain cooldown at solve time, matching the 7-day Renovate minimumReleaseAge
+# (Renovate's lock file maintenance skips it; see DIRACGrid/.github renovate-config.json).
+# The relative form needs pixi >= 0.67.0.
+exclude-newer = "7d"
+
+[tool.pixi.environments]
+# `pixi run test` without `-e` uses the default environment: same as py311.
+default = { features = ["testing", "py311"], solve-group = "py311" }
+py39 = { features = ["testing", "py39"] }
+py310 = { features = ["testing", "py310"] }
+py311 = { features = ["testing", "py311"], solve-group = "py311" }
+
+[tool.pixi.feature.py39.dependencies]
+python = "3.9.*"
+
+[tool.pixi.feature.py310.dependencies]
+python = "3.10.*"
+
+[tool.pixi.feature.py311.dependencies]
+python = "3.11.*"
+
+[tool.pixi.feature.testing.pypi-dependencies]
+# pytest, pytest-cov and pylint come from setup.py's `testing` extra
+diraccfg = { path = ".", editable = true, extras = ["testing"] }
+mypy = "*"
+
+[tool.pixi.tasks]
+mypy = { cmd = "mypy", description = "Type-check the sources" }
+pylint = { cmd = "pylint -E src/diraccfg/ tests/", description = "Run pylint" }
+test = { cmd = "pytest", description = "Run the test suite" }

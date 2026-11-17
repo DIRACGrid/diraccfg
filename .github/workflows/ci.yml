@@ -2,51 +2,60 @@ name: CI
 
 on: [push, pull_request]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
 jobs:
   pre-commit:
     runs-on: ubuntu-latest
     if: github.event_name != 'push' || github.repository == 'DIRACGrid/diraccfg'
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-python@v4
-      with:
-        python-version: '3.11'
-    - name: Install pre-commit
-      run: pip install pre-commit
-    - name: Run pre-commit
-      run: pre-commit run --all-files --show-diff-on-failure
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          # the pinned pre-commit hook versions (flynt 0.77, pyupgrade v3.3.1)
+          # predate the removal of ast.Str in Python 3.12
+          python-version: '3.11'
+      - uses: pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd # v3.0.1
 
   pytest:
+    name: pytest (${{ matrix.python-version }})
     runs-on: ubuntu-latest
+    if: github.event_name != 'push' || github.repository == 'DIRACGrid/diraccfg'
     strategy:
-      fail-fast: False
+      fail-fast: false
       matrix:
-        python_version:
-          - "3.9"
-          - "3.10"
-          - "3.11"
+        python-version: [py39, py310, py311]
     steps:
-    - uses: actions/checkout@v3
-    - name: Install conda
-      run: |
-        wget -q -O /tmp/miniforge.sh "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh"
-        bash /tmp/miniforge.sh -b -p "${HOME}/miniforge"
-        echo "${HOME}/miniforge/bin" >> "$GITHUB_PATH"
-        echo "CONDA=${HOME}/miniforge" >> "$GITHUB_ENV"
-    - name: Prepare environment
-      run: .github/workflows/prepare_environment.sh ${{ matrix.python_version }}
-    - name: Run pytest
-      run: |
-        . "${CONDA}/bin/activate" test-env
-        pytest
-    - name: Run mypy
-      run: |
-        . "${CONDA}/bin/activate" test-env
-        mypy
-    - name: Run pylint
-      run: |
-        . "${CONDA}/bin/activate" test-env
-        pylint -E src/diraccfg/ tests/
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0  # setuptools_scm needs the tags to compute the version
+      - name: Apply workarounds
+        run: |
+          # Workaround for https://github.com/prefix-dev/pixi/issues/3762
+          sed -i.bak 's@editable = true@editable = false@g' pyproject.toml
+          rm pyproject.toml.bak
+          # Show any changes
+          git diff
+      - uses: prefix-dev/setup-pixi@9936258fee697aff89b3fed6ca1f80a382ef694e # v0.11.3
+        with:
+          pixi-version: v0.84.1
+          cache: false
+          environments: ${{ matrix.python-version }}
+      - name: Run pytest
+        run: pixi run -e ${{ matrix.python-version }} pytest
+      - name: Run mypy
+        run: pixi run -e ${{ matrix.python-version }} mypy
+      - name: Run pylint
+        run: pixi run -e ${{ matrix.python-version }} pylint
 
   build-pypi:
     runs-on: ubuntu-latest
@@ -57,21 +66,17 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v3
-      - name: Install conda
-        run: |
-          wget -q -O /tmp/miniforge.sh "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh"
-          bash /tmp/miniforge.sh -b -p "${HOME}/miniforge"
-          echo "${HOME}/miniforge/bin" >> "$GITHUB_PATH"
-          echo "CONDA=${HOME}/miniforge" >> "$GITHUB_ENV"
-      - run: |
-          git fetch --prune --unshallow
-      - name: Prepare environment
-        run: .github/workflows/prepare_environment.sh 3
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0  # setuptools_scm needs the tags to compute the version
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.11'
       - name: Build distributions
         run: |
-          . "${CONDA}/bin/activate" test-env
-          python setup.py sdist bdist_wheel --universal
+          python -m pip install --upgrade build
+          python -m build --sdist --wheel --outdir dist/ .
       - name: Check if this is a tag push
         id: check-tag
         env:
