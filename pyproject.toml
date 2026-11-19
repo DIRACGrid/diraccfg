@@ -50,3 +50,9 @@ mypy = "*"
 mypy = { cmd = "mypy", description = "Type-check the sources" }
 pylint = { cmd = "pylint -E src/diraccfg/ tests/", description = "Run pylint" }
 test = { cmd = "pytest", description = "Run the test suite" }
+
+[tool.bandit]
+exclude_dirs = [".github", "docs", "test", "tests"]
+skips = [
+  "B101", # assert_used - asserts are used for internal sanity checks in the parser
+]
