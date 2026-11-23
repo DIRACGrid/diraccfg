@@ -22,7 +22,12 @@ jobs:
           # the pinned pre-commit hook versions (flynt 0.77, pyupgrade v3.3.1)
           # predate the removal of ast.Str in Python 3.12
           python-version: '3.11'
-      - uses: pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd # v3.0.1
+      # pre-commit/action is not used because it wraps actions/cache@v4 (by
+      # tag, not SHA), which the organization action policy rejects
+      - name: Install pre-commit
+        run: pip install pre-commit
+      - name: Run pre-commit
+        run: pre-commit run --all-files --show-diff-on-failure
 
   pytest:
     name: pytest (${{ matrix.python-version }})
