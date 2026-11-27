@@ -51,10 +51,13 @@ disable = ["unsubscriptable-object"]
 [tool.pixi.workspace]
 channels = ["conda-forge"]
 platforms = ["linux-64", "osx-arm64"]
+# Require a pixi new enough for the exclude-newer table below (added in 0.84.0)
+requires-pixi = ">=0.84.0"
+
 # Supply-chain cooldown at solve time, matching the 7-day Renovate minimumReleaseAge
 # (Renovate's lock file maintenance skips it; see DIRACGrid/.github renovate-config.json).
-# The relative form needs pixi >= 0.67.0.
-exclude-newer = "7d"
+[tool.pixi.workspace.exclude-newer]
+cutoff = "7d"
 
 [tool.pixi.environments]
 # `pixi run test` without `-e` uses the default environment: same as py311.
